@@ -107,15 +107,15 @@ Run on remote host: ssh root@localhost -p 7000
 
 ### Virtual Pager Mode (8080 -\> 1471)
 
-Open in browser on remote host: http://localhost:1471
+Open in browser on remote host: http://localhost:8080
 
 ------------------------------------------------------------------------
 
 ## Custom Ports
 
-SSH: ssh `<username>`{=html}@localhost -p `<REMOTE_PORT>`{=html}
+SSH: ssh root@localhost -p `<REMOTE_PORT>`{=html}
 
-Web: http://localhost:`<LOCAL_PORT>`{=html}
+Web: http://localhost:8080
 
 ------------------------------------------------------------------------
 
