@@ -3,7 +3,7 @@
 # Title: Weather
 # Author: spywill
 # Description:  A simple weather app to check local or enter city name 
-# Version: 1.0
+# Version: 1.1
 
 # Check internet connection
 if ping -c 1 -W 2 8.8.8.8 >/dev/null 2>&1; then
@@ -13,7 +13,7 @@ else
 	exit 1
 fi
 
-my_city=$(curl -s ipinfo.io/city | sed 's/ /+/g')
+my_city=$( (curl -fs https://ipapi.co/city || curl -fs https://ipinfo.io/city || curl -fs http://ip-api.com/line?fields=city) | tr ' ' '+' )
 CITY=$(TEXT_PICKER "Enter cities name" "$my_city")
 DATA=$(curl -s "https://wttr.in/${CITY}?format=j1")
 
