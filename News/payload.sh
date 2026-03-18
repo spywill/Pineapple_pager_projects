@@ -3,7 +3,7 @@
 # Title: News
 # Description: View top news stories from around the world
 # Author: spywill
-# Version: 1.0
+# Version: 1.1
 
 # Check internet connection
 if ping -c 1 -W 2 8.8.8.8 >/dev/null 2>&1; then
@@ -47,6 +47,11 @@ https://www.reddit.com/r/technology/.json?limit=10&t=day
 https://www.reddit.com/r/business/.json?limit=10&t=day
 https://www.reddit.com/r/economics/.json?limit=10&t=day
 https://www.reddit.com/r/cybersecurity/.json?limit=10&t=day
+https://www.reddit.com/r/sports/.json?limit=10&t=day
+https://www.reddit.com/r/nfl/.json?limit=10&t=day
+https://www.reddit.com/r/nba/.json?limit=10&t=day
+https://www.reddit.com/r/soccer/.json?limit=10&t=day
+https://www.reddit.com/r/nhl/.json?limit=10&t=day
 "
 
 # Finance feeds
@@ -55,6 +60,17 @@ https://finance.yahoo.com/news/rssindex
 https://www.cnbc.com/id/100003114/device/rss/rss.html
 https://feeds.a.dj.com/rss/RSSMarketsMain.xml
 https://news.google.com/rss/search?q=stock+market&hl=en-US&gl=US&ceid=US:en
+"
+
+# Sports feeds
+sports_feeds="
+https://www.espn.com/espn/rss/news
+https://www.skysports.com/rss/12040
+https://www.cbssports.com/rss/headlines/
+https://news.google.com/rss/search?q=sports&hl=en-US&gl=US&ceid=US:en
+https://news.google.com/rss/search?q=nhl&hl=en-US&gl=US&ceid=US:en
+https://news.google.com/rss/search?q=nfl&hl=en-US&gl=US&ceid=US:en
+https://news.google.com/rss/search?q=nba&hl=en-US&gl=US&ceid=US:en
 "
 
 # Stooq feeds
@@ -79,7 +95,7 @@ print_titles() {
 	}' |
 	sort -u |
 	head -n 10 |
-	awk '{printf "%2d. %s\n", NR, $0}'
+	awk '{printf "%2d. %s\n\n", NR, $0}'
 }
 
 print_reddit() {
@@ -89,7 +105,7 @@ print_reddit() {
 	"$1" \
 	| jq -r '.data.children[].data.title' \
 	| head -n 10 \
-	| awk '{print NR ". " $0}'
+	| awk '{print NR ". " $0 "\n"}'
 }
 
 # GLOBAL NEWS
@@ -110,6 +126,11 @@ for feed in $feeds; do
 done
 
 # REDDIT NEWS
+LOG ""
+LOG blue "======================================="
+LOG green "REDDIT NEWS DASHBOARD"
+LOG blue "======================================="
+
 for feed in $reddit_feeds; do
 	sub=$(echo "$feed" | sed -E 's|https://www.reddit.com/r/([^/]+)/.*|\1|')
 
@@ -118,6 +139,27 @@ for feed in $reddit_feeds; do
 	LOG blue "---------------------------------------"
 
 	LOG yellow "$(print_reddit "$feed")"
+done
+
+LOG ""
+LOG red "Press button A to continue
+to Sports News"
+WAIT_FOR_BUTTON_PRESS A
+LOG ""
+
+# SPORTS NEWS
+LOG blue "======================================="
+LOG green "SPORTS NEWS DASHBOARD"
+LOG blue "======================================="
+
+for feed in $sports_feeds; do
+	domain=$(echo "$feed" | sed -E 's|https?://||; s|/.*||')
+
+	LOG ""
+	LOG green "$domain"
+	LOG blue "---------------------------------------"
+
+	LOG yellow "$(print_titles "$feed")"
 done
 
 LOG ""
@@ -254,10 +296,16 @@ news() {
 	BEGIN{RS="<item>";FS="<title>|</title>|<link>|</link>"}
 	NR>1{
 		title=$2
-		link=$4
+		if (match($0, /<description>(.*?)<\/description>/, d)) {
+			desc = d[1]
+			gsub(/<!\[CDATA\[|\]\]>/, "", desc)
+			gsub(/<[^>]*>/,"",desc)
+			gsub("&amp;","&",desc)
+			gsub(/[ \t\r\n]+/, " ", desc)
+		}
 		gsub("&amp;","&",title)
 		if(length(title)>5){
-			printf("[%d] %s\n    %s\n\n",++i,title,link)
+			printf("[%d] %s\n%s\n\n",++i,title,desc)
 		}
 		if(i==10) exit
 	}')"
